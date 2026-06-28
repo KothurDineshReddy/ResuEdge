@@ -10,6 +10,7 @@
   <img alt="Python" src="https://img.shields.io/badge/python-3.11%2B-blue.svg">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.100%2B-009688.svg">
   <img alt="React" src="https://img.shields.io/badge/React-18-61dafb.svg">
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-ready-2496ed.svg">
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-yellow.svg">
 </p>
 
@@ -36,6 +37,18 @@
 | Bonus Points | +20 |
 | **Total** | **120** |
 
+Suggestions are generated for any section that scores below **70% of its maximum**.
+
+---
+
+## Supported Models
+
+- `gemini-2.5-pro`
+- `gemini-2.5-flash`
+- `gemini-2.5-flash-lite`
+- `gemini-2.0-flash` _(default)_
+- `gemini-2.0-flash-lite`
+
 ---
 
 ## Tech Stack
@@ -50,16 +63,34 @@
 
 ## Getting Started
 
+### Docker (recommended)
+
 ```bash
-# Clone the repo
 git clone https://github.com/KothurDineshReddy/ResuEdge.git
 cd ResuEdge
-
-# Run with Docker (recommended)
 docker-compose up --build
+```
 
-# Frontend: http://localhost:3000
-# Backend:  http://localhost:8000
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+
+### Local development
+
+**Backend**
+
+```bash
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+```
+
+**Frontend**
+
+```bash
+cd frontend
+npm install
+npm start          # http://localhost:3000
 ```
 
 ---
