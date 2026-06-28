@@ -65,7 +65,12 @@ async def evaluate_resume(
         # Step 1: Parse PDF
         logger.info(f"Parsing PDF: {pdf.filename}")
         pdf_handler = PDFHandler(model_name=model, api_key=gemini_api_key)
-        json_resume = pdf_handler.process_pdf(tmp_path)
+        json_resume = pdf_handler.extract_json_from_pdf(tmp_path)
+        if json_resume is None:
+            raise HTTPException(
+                status_code=422,
+                detail="Failed to extract resume content. This is usually a Gemini API quota or rate-limit issue. Try switching to gemini-2.5-flash-lite or wait a moment and retry."
+            )
 
         # Step 2: GitHub enrichment
         github_data = None
