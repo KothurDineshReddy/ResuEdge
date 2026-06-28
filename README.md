@@ -16,6 +16,14 @@
 
 ---
 
+## Screenshots
+
+| Upload | Results |
+|---|---|
+| ![Upload screen](assets/home.png) | ![Results screen](assets/results.png) |
+
+---
+
 ## What it does
 
 1. Upload a resume PDF
