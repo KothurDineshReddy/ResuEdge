@@ -12,6 +12,7 @@ from pdf import logger
 from prompts.template_manager import TemplateManager
 from prompt import DEFAULT_MODEL, MODEL_PARAMETERS
 from llm_utils import initialize_llm_provider, extract_json_from_response
+from typing import Tuple
 from config import DEVELOPMENT_MODE
 
 
@@ -366,17 +367,17 @@ def generate_projects_json(projects: List[Dict]) -> List[Dict]:
             f"🤖 Using LLM to select top 5 projects from {len(projects)} repositories..."
         )
 
-        # Initialize the LLM provider
-        provider = initialize_llm_provider(DEFAULT_MODEL)
+        # Initialize the LLM provider — api_key and model_name passed from caller
+        provider = initialize_llm_provider(_current_api_key)
 
         # Get model parameters
         model_params = MODEL_PARAMETERS.get(
-            DEFAULT_MODEL, {"temperature": 0.1, "top_p": 0.9}
+            _current_model_name, {"temperature": 0.1, "top_p": 0.9}
         )
 
         # Prepare chat parameters
         chat_params = {
-            "model": DEFAULT_MODEL,
+            "model": _current_model_name,
             "messages": [
                 {
                     "role": "system",
@@ -456,7 +457,32 @@ def generate_projects_json(projects: List[Dict]) -> List[Dict]:
         return projects_data
 
 
-def fetch_and_display_github_info(github_url: str) -> Dict:
+def fetch_and_display_github_info(
+    json_resume, model_name: str = DEFAULT_MODEL, api_key: str = ""
+) -> Dict:
+    """Fetch GitHub data for the first GitHub profile found in the resume."""
+    global _current_api_key, _current_model_name
+    _current_api_key = api_key
+    _current_model_name = model_name
+
+    github_url = None
+    if json_resume and json_resume.basics and json_resume.basics.profiles:
+        for profile in json_resume.basics.profiles:
+            if profile.network and profile.network.lower() == "github":
+                github_url = profile.url
+                break
+
+    if not github_url:
+        return {}
+
+    return _fetch_github_data(github_url)
+
+
+_current_api_key = ""
+_current_model_name = DEFAULT_MODEL
+
+
+def _fetch_github_data(github_url: str) -> Dict:
     logger.info(f"{github_url}")
     github_profile = fetch_github_profile(github_url)
     if not github_profile:

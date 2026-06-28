@@ -23,12 +23,7 @@ from models import (
 from llm_utils import initialize_llm_provider, extract_json_from_response
 from pymupdf_rag import to_markdown
 from typing import List, Optional, Dict, Any
-from prompt import (
-    DEFAULT_MODEL,
-    MODEL_PARAMETERS,
-    MODEL_PROVIDER_MAPPING,
-    GEMINI_API_KEY,
-)
+from prompt import DEFAULT_MODEL, MODEL_PARAMETERS
 from prompts.template_manager import TemplateManager
 from transform import transform_parsed_data
 
@@ -36,13 +31,11 @@ logger = logging.getLogger(__name__)
 
 
 class PDFHandler:
-    def __init__(self):
+    def __init__(self, model_name: str = DEFAULT_MODEL, api_key: str = ""):
+        self.model_name = model_name
+        self.model_params = MODEL_PARAMETERS.get(model_name, {"temperature": 0.1, "top_p": 0.9})
         self.template_manager = TemplateManager()
-        self._initialize_llm_provider()
-
-    def _initialize_llm_provider(self):
-        """Initialize the appropriate LLM provider based on the model."""
-        self.provider = initialize_llm_provider(DEFAULT_MODEL)
+        self.provider = initialize_llm_provider(api_key)
 
     def extract_text_from_pdf(self, pdf_path: str) -> Optional[str]:
         try:
@@ -69,12 +62,10 @@ class PDFHandler:
         try:
             start_time = time.time()
             logger.debug(
-                f"🔄 Extracting {section_name} section using {DEFAULT_MODEL}..."
+                f"🔄 Extracting {section_name} section using {self.model_name}..."
             )
 
-            model_params = MODEL_PARAMETERS.get(
-                DEFAULT_MODEL, {"temperature": 0.1, "top_p": 0.9}
-            )
+            model_params = self.model_params
 
             section_system_message = self.template_manager.render_template(
                 "system_message", section_name_param=section_name
@@ -86,7 +77,7 @@ class PDFHandler:
                 return None
 
             chat_params = {
-                "model": DEFAULT_MODEL,
+                "model": self.model_name,
                 "messages": [
                     {"role": "system", "content": section_system_message},
                     {"role": "user", "content": prompt},
