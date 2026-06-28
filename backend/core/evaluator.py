@@ -1,6 +1,6 @@
 from typing import Any
-from models import EvaluationData
-from llm_utils import initialize_llm_provider, extract_json_from_response
+from .models import EvaluationData
+from .llm_utils import initialize_llm_provider, extract_json_from_response
 import logging
 import json
 
@@ -8,9 +8,7 @@ MAX_BONUS_POINTS = 20
 MIN_FINAL_SCORE = -20
 MAX_FINAL_SCORE = 120
 
-SUGGESTION_THRESHOLD = 0.70  # sections scoring below 70% of max get suggestions
-
-from prompt import MODEL_PARAMETERS, DEFAULT_MODEL
+from .prompt import MODEL_PARAMETERS, DEFAULT_MODEL
 from prompts.template_manager import TemplateManager
 
 logger = logging.getLogger(__name__)
@@ -69,14 +67,3 @@ class ResumeEvaluator:
             logger.error(f"Error evaluating resume: {e}")
             raise
 
-    def get_weak_sections(self, evaluation: EvaluationData) -> dict:
-        """Return sections that scored below SUGGESTION_THRESHOLD of their max."""
-        weak = {}
-        for section_name, category in evaluation.scores.model_dump().items():
-            if category["score"] < SUGGESTION_THRESHOLD * category["max"]:
-                weak[section_name] = {
-                    "score": category["score"],
-                    "max": category["max"],
-                    "evidence": category["evidence"],
-                }
-        return weak

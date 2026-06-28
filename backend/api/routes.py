@@ -1,13 +1,9 @@
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "core"))
-
 import logging
+import os
 import tempfile
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Optional
 
 from core.evaluator import ResumeEvaluator, MAX_BONUS_POINTS, MIN_FINAL_SCORE, MAX_FINAL_SCORE
 from core.prompt import SUPPORTED_MODELS, DEFAULT_MODEL
@@ -85,13 +81,15 @@ async def evaluate_resume(
         evaluator = ResumeEvaluator(api_key=gemini_api_key, model_name=model)
         evaluation = evaluator.evaluate_resume(resume_text)
 
-        # Step 5: Suggestions for weak sections
-        weak_sections = evaluator.get_weak_sections(evaluation)
-        suggestions = {}
-        if weak_sections:
-            from core.suggestions import SuggestionsEngine
-            engine = SuggestionsEngine(api_key=gemini_api_key, model_name=model)
-            suggestions = engine.generate(evaluation, weak_sections)
+        # Step 5: Suggestions for weak sections (second Gemini call)
+        from core.suggestions import SuggestionsEngine
+        engine = SuggestionsEngine(api_key=gemini_api_key, model_name=model)
+        suggestions = engine.generate(
+            evaluation=evaluation,
+            candidate_name=candidate_name,
+            total_score=round(total_score, 1),
+            max_score=100 + MAX_BONUS_POINTS,
+        )
 
         # Build final score
         scores = evaluation.scores.model_dump()

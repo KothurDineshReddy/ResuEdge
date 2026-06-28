@@ -4,7 +4,7 @@ Utility functions for LLM providers.
 
 import logging
 from typing import Any
-from models import GeminiProvider
+from .models import GeminiProvider
 
 logger = logging.getLogger(__name__)
 

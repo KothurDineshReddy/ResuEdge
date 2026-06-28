@@ -18,7 +18,9 @@ class TemplateManager:
     different resume sections (basics, work, education, skills, projects, awards).
     """
 
-    def __init__(self, template_dir: str = "prompts/templates"):
+    def __init__(self, template_dir: str = None):
+        if template_dir is None:
+            template_dir = os.path.join(os.path.dirname(__file__), "templates")
         """
         Initialize the template manager.
 
@@ -45,6 +47,7 @@ class TemplateManager:
             "github_project_selection": "github_project_selection.jinja",
             "resume_evaluation_criteria": "resume_evaluation_criteria.jinja",
             "resume_evaluation_system_message": "resume_evaluation_system_message.jinja",
+            "resume_suggestions": "resume_suggestions.jinja",
         }
 
         for section_name, filename in template_files.items():

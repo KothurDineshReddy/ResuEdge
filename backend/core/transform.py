@@ -1,6 +1,5 @@
 from typing import Dict, List, Optional
-import pdb
-from models import JSONResume
+from .models import JSONResume
 
 
 def transform_parsed_data(parsed_data: Dict) -> Dict:

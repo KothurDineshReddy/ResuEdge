@@ -1,30 +1,19 @@
 import os
 import re
 import json
+import logging
 import requests
 import datetime
 import time
 from pathlib import Path
+from typing import Dict, List, Optional, Any, Tuple
 
-from typing import Dict, List, Optional, Any
-from models import GitHubProfile
-from pdf import logger
+from .models import GitHubProfile
 from prompts.template_manager import TemplateManager
-from prompt import DEFAULT_MODEL, MODEL_PARAMETERS
-from llm_utils import initialize_llm_provider, extract_json_from_response
-from typing import Tuple
-from config import DEVELOPMENT_MODE
+from .prompt import DEFAULT_MODEL, MODEL_PARAMETERS
+from .llm_utils import initialize_llm_provider, extract_json_from_response
 
-
-def _create_cache_filename(api_url: str, params: dict = None) -> str:
-    url_parts = api_url.replace("https://api.github.com/", "").replace("/", "_")
-
-    if params:
-        param_str = "_".join([f"{k}_{v}" for k, v in sorted(params.items())])
-        filename = f"cache/gh_githubcache_{url_parts}_{param_str}.json"
-    else:
-        filename = f"cache/gh_githubcache_{url_parts}.json"
-    return filename
+logger = logging.getLogger(__name__)
 
 
 def _fetch_github_api(api_url, params=None):
@@ -32,23 +21,6 @@ def _fetch_github_api(api_url, params=None):
     github_token = os.environ.get("GITHUB_TOKEN")
     if github_token:
         headers["Authorization"] = f"token {github_token}"
-
-    cache_filename = _create_cache_filename(api_url, params)
-    if DEVELOPMENT_MODE and os.path.exists(cache_filename):
-        print(f"Loading cached GitHub data from {cache_filename}")
-        try:
-            cached_data = json.loads(Path(cache_filename).read_text(encoding="utf-8"))
-            if not cached_data:
-                raise ValueError("Cached data is empty")
-            return 200, cached_data
-        except Exception as e:
-            print(f"⚠️ Warning: Error reading cache file {cache_filename}: {e}")
-            try:
-                os.remove(cache_filename)
-            except Exception as delete_err:
-                print(
-                    f"Failed to delete invalid cache file {cache_filename}: {delete_err}"
-                )
 
     response = requests.get(api_url, params, timeout=10, headers=headers)
     status_code = response.status_code
@@ -101,16 +73,6 @@ def _fetch_github_api(api_url, params=None):
             )
 
     data = response.json() if response.status_code == 200 else {}
-
-    if DEVELOPMENT_MODE and status_code == 200:
-        try:
-            os.makedirs("cache", exist_ok=True)
-            Path(cache_filename).write_text(
-                json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8"
-            )
-        except Exception as e:
-            logger.error(f"Error caching GitHub data to {cache_filename}: {e}")
-
     return status_code, data
 
 

@@ -5,7 +5,7 @@ import time
 import logging
 import pymupdf
 
-from models import (
+from .models import (
     JSONResume,
     Basics,
     Work,
@@ -20,12 +20,12 @@ from models import (
     ProjectsSection,
     AwardsSection,
 )
-from llm_utils import initialize_llm_provider, extract_json_from_response
-from pymupdf_rag import to_markdown
+from .llm_utils import initialize_llm_provider, extract_json_from_response
+from .pymupdf_rag import to_markdown
 from typing import List, Optional, Dict, Any
-from prompt import DEFAULT_MODEL, MODEL_PARAMETERS
+from .prompt import DEFAULT_MODEL, MODEL_PARAMETERS
 from prompts.template_manager import TemplateManager
-from transform import transform_parsed_data
+from .transform import transform_parsed_data
 
 logger = logging.getLogger(__name__)
 
