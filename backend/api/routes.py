@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from core.evaluator import ResumeEvaluator, MAX_BONUS_POINTS, MIN_FINAL_SCORE, MAX_FINAL_SCORE
 from core.prompt import SUPPORTED_MODELS, DEFAULT_MODEL
+from core.config import MAX_UPLOAD_SIZE_MB
 from core.pdf import PDFHandler
 from core.github import fetch_and_display_github_info
 from core.transform import (
@@ -54,6 +55,9 @@ async def evaluate_resume(
     # Write uploaded PDF to a temp file
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
         content = await pdf.read()
+        size_mb = len(content) / (1024 * 1024)
+        if size_mb > MAX_UPLOAD_SIZE_MB:
+            raise HTTPException(status_code=413, detail=f"File too large. Maximum size is {MAX_UPLOAD_SIZE_MB}MB.")
         tmp.write(content)
         tmp_path = tmp.name
 
@@ -81,16 +85,6 @@ async def evaluate_resume(
         evaluator = ResumeEvaluator(api_key=gemini_api_key, model_name=model)
         evaluation = evaluator.evaluate_resume(resume_text)
 
-        # Step 5: Suggestions for weak sections (second Gemini call)
-        from core.suggestions import SuggestionsEngine
-        engine = SuggestionsEngine(api_key=gemini_api_key, model_name=model)
-        suggestions = engine.generate(
-            evaluation=evaluation,
-            candidate_name=candidate_name,
-            total_score=round(total_score, 1),
-            max_score=100 + MAX_BONUS_POINTS,
-        )
-
         # Build final score
         scores = evaluation.scores.model_dump()
         total_score = sum(min(s["score"], s["max"]) for s in scores.values())
@@ -102,6 +96,16 @@ async def evaluate_resume(
             json_resume.basics.name
             if json_resume and json_resume.basics and json_resume.basics.name
             else "Candidate"
+        )
+
+        # Step 5: Suggestions for weak sections (second Gemini call)
+        from core.suggestions import SuggestionsEngine
+        engine = SuggestionsEngine(api_key=gemini_api_key, model_name=model)
+        suggestions = engine.generate(
+            evaluation=evaluation,
+            candidate_name=candidate_name,
+            total_score=round(total_score, 1),
+            max_score=100 + MAX_BONUS_POINTS,
         )
 
         return JSONResponse(content={
