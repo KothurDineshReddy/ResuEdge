@@ -1,6 +1,11 @@
 MIT License
 
-Copyright (c) 2026 KothurDineshReddy
+Portions of this software are based on hiring-agent
+(https://github.com/interviewstreet/hiring-agent)
+Copyright (c) HackerRank / InterviewStreet
+
+ResuEdge modifications, new features, and full-stack architecture
+Copyright (c) 2025 Dinesh Reddy Kothur (https://github.com/KothurDineshReddy)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
